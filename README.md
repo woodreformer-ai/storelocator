@@ -12,6 +12,7 @@ Kaart: Leaflet + OpenStreetMap/CARTO (geen API-sleutel). Zoeken: Nominatim.
 
 ## Gedrag
 - Klant typt postcode/stad of klikt *Gebruik mijn locatie* → lijst sorteert op afstand (km).
+- Filter op type reformer (knoppen verschijnen automatisch zodra er meer dan één type is).
 - Klik op studio of marker → kaart zoomt en highlight; *Route* opent Google Maps.
 - Zonder coördinaten wordt het adres automatisch opgezocht (gecached in browser); vul lat/lng in voor snelheid.
 

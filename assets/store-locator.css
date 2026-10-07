@@ -61,6 +61,18 @@
 .wr-locator__btn--ghost:hover { color: var(--wr-btn-hover); background: transparent; border-color: var(--wr-btn-hover); }
 .wr-locator__status { font-size: 12px; color: var(--wr-muted); min-height: 18px; }
 
+/* filter op type reformer */
+.wr-locator__filters { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--wr-border); }
+.wr-locator__filter-label { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--wr-muted); margin-right: 4px; }
+.wr-chip {
+  height: 30px; padding: 0 12px; cursor: pointer; font: inherit; font-size: 11px; font-weight: 400;
+  letter-spacing: .06em; text-transform: uppercase; color: var(--wr-fg); background: transparent;
+  border: 1px solid var(--wr-fg); border-radius: 0; transition: background .15s, color .15s;
+}
+.wr-chip:hover { background: var(--wr-soft); }
+.wr-chip.is-on { color: #fff; background: #000; }
+.wr-chip:focus-visible, .wr-locator__btn:focus-visible { outline: 2px solid #000; outline-offset: 2px; }
+
 /* lijst */
 .wr-locator__count {
   padding: 12px 16px; font-size: 12px; letter-spacing: .06em; text-transform: uppercase;

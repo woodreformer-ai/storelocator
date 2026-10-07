@@ -50,6 +50,7 @@
     });
     this.origin = null;
     this.activeId = null;
+    this.filter = null;
     this.markers = {};
     this.$ = function (sel) { return root.querySelector(sel); };
     this.initMap();
@@ -75,6 +76,19 @@
 
   Locator.prototype.bind = function () {
     var self = this, form = this.$('[data-wr-form]');
+    var filters = this.$('[data-wr-filters]');
+    if (filters) filters.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-type]');
+      if (!b) return;
+      self.filter = b.getAttribute('data-type') || null;
+      if (self.activeId != null && self.studios[self.activeId] && self.filter &&
+          self.studios[self.activeId].types.indexOf(self.filter) === -1) self.activeId = null;
+      self.render();
+      if (self.origin) {
+        var near = self.sorted().filter(function (s) { return s.lat != null; }).slice(0, 3);
+        self.map.fitBounds([[self.origin.lat, self.origin.lng]].concat(near.map(function (s) { return [s.lat, s.lng]; })), { padding: [60, 60], maxZoom: 12 });
+      } else self.fitAll();
+    });
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       var q = self.$('[data-wr-input]').value.trim();
@@ -125,9 +139,32 @@
     this.fitAll();
   };
 
+  Locator.prototype.visible = function () {
+    var f = this.filter;
+    return this.studios.filter(function (s) { return !f || s.types.indexOf(f) !== -1; });
+  };
+
+  Locator.prototype.allTypes = function () {
+    var seen = {};
+    this.studios.forEach(function (s) { s.types.forEach(function (t) { seen[t] = true; }); });
+    return Object.keys(seen).sort();
+  };
+
+  Locator.prototype.renderFilters = function () {
+    var box = this.$('[data-wr-filters]'), self = this, types = this.allTypes();
+    if (!box) return;
+    if (types.length < 2) { box.hidden = true; return; }
+    box.hidden = false;
+    var all = [null].concat(types);
+    box.innerHTML = '<span class="wr-locator__filter-label">Type reformer</span>' + all.map(function (t) {
+      var on = (t === self.filter);
+      return '<button type="button" class="wr-chip' + (on ? ' is-on' : '') + '" aria-pressed="' + on + '" data-type="' + esc(t || '') + '">' + esc(t || 'Alle') + '</button>';
+    }).join('');
+  };
+
   Locator.prototype.sorted = function () {
     var o = this.origin;
-    var list = this.studios.slice();
+    var list = this.visible();
     list.forEach(function (s) { s.dist = (o && s.lat != null) ? distanceKm(o, s) : null; });
     list.sort(function (a, b) {
       if (o) {
@@ -143,8 +180,9 @@
   Locator.prototype.render = function () {
     var self = this, list = this.sorted();
     var ul = this.$('[data-wr-list]');
+    this.renderFilters();
     this.$('[data-wr-count]').textContent = list.length + (list.length === 1 ? ' studio' : ' studio’s');
-    if (!list.length) { ul.innerHTML = '<li class="wr-locator__empty">Er zijn nog geen studio’s toegevoegd.</li>'; return; }
+    if (!list.length) { ul.innerHTML = '<li class="wr-locator__empty">Geen studio’s gevonden voor deze selectie.</li>'; this.renderMarkers(); return; }
     ul.innerHTML = list.map(function (s) {
       var img = s.image
         ? '<img class="wr-studio__img" src="' + esc(s.image) + '" alt="' + esc(s.name) + '" loading="lazy" width="112" height="112">'
@@ -167,7 +205,7 @@
     var self = this;
     this.markerLayer.clearLayers();
     this.markers = {};
-    this.studios.forEach(function (s) {
+    this.visible().forEach(function (s) {
       if (s.lat == null) return;
       var m = L.marker([s.lat, s.lng], {
         title: s.name,
@@ -199,7 +237,7 @@
   };
 
   Locator.prototype.fitAll = function () {
-    var pts = this.studios.filter(function (s) { return s.lat != null; }).map(function (s) { return [s.lat, s.lng]; });
+    var pts = this.visible().filter(function (s) { return s.lat != null; }).map(function (s) { return [s.lat, s.lng]; });
     if (pts.length > 1) this.map.fitBounds(pts, { padding: [50, 50] });
     else if (pts.length === 1) this.map.setView(pts[0], 12);
   };
