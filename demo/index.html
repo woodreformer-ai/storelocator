@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Store locator demo</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400&family=Newsreader:opsz,wght@6..72,200;6..72,300&display=swap">
+<link rel="stylesheet" href="../assets/store-locator.css">
+<style>body{margin:0;font-family:Inter,sans-serif}</style>
+</head>
+<body>
+<div class="wr-locator" data-wr-locator>
+  <div class="wr-locator__inner">
+    <h2 class="wr-locator__title">Vind een studio</h2>
+    <p class="wr-locator__intro">Ontdek waar je Wood Reformer in het echt kan proberen. Voer je postcode of stad in en vind de studio’s in jouw buurt.</p>
+    <div class="wr-locator__layout">
+      <div class="wr-locator__panel">
+        <form class="wr-locator__search" data-wr-form role="search">
+          <div class="wr-locator__row">
+            <input class="wr-locator__input" data-wr-input type="search" placeholder="Postcode of stad">
+            <button class="wr-locator__btn" type="submit">Zoek</button>
+          </div>
+          <button class="wr-locator__btn wr-locator__btn--ghost" type="button" data-wr-locate>Gebruik mijn locatie</button>
+          <div class="wr-locator__status" data-wr-status aria-live="polite"></div>
+        </form>
+        <div class="wr-locator__count" data-wr-count></div>
+        <ul class="wr-locator__list" data-wr-list></ul>
+      </div>
+      <div class="wr-locator__map-wrap"><div class="wr-locator__map" data-wr-map></div></div>
+    </div>
+  </div>
+  <!-- VOORBEELDDATA — niet de echte studio's -->
+  <script type="application/json" data-wr-config>
+  {"centerLat":"50.85","centerLng":"4.35","zoom":7,"countries":"be,nl,fr,de,lu","studios":[
+    {"name":"Voorbeeld Studio Antwerpen","address":"Meir 1, 2000 Antwerpen, België","lat":"51.2194","lng":"4.4025","types":["Reformer Classic"],"image":"","url":"","phone":"+32 3 000 00 00"},
+    {"name":"Voorbeeld Studio Gent","address":"Korenmarkt 1, 9000 Gent, België","lat":"51.0543","lng":"3.7174","types":["Reformer Classic","Reformer Pro"],"image":"","url":"https://woodreformer.com","phone":""},
+    {"name":"Voorbeeld Studio Brussel","address":"Grote Markt 1, 1000 Brussel, België","lat":"50.8467","lng":"4.3525","types":["Reformer Pro"],"image":"","url":"","phone":""},
+    {"name":"Voorbeeld Studio Amsterdam","address":"Dam 1, 1012 JS Amsterdam, Nederland","lat":"52.3731","lng":"4.8922","types":["Reformer Classic"],"image":"","url":"","phone":""}
+  ]}
+  </script>
+</div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="../assets/store-locator.js"></script>
+</body>
+</html>
