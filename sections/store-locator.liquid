@@ -39,6 +39,7 @@
       "centerLng": {{ section.settings.center_lng | default: '4.35' | json }},
       "zoom": {{ section.settings.zoom | json }},
       "countries": {{ section.settings.countries | json }},
+      "googleKey": {{ section.settings.google_maps_key | strip | json }},
       "studios": [
         {%- for block in section.blocks -%}
           {
@@ -70,6 +71,7 @@
     { "type": "textarea", "id": "intro", "label": "Introductietekst", "default": "Ontdek waar je Wood Reformer in het echt kan proberen. Voer je postcode of stad in en vind de studio’s in jouw buurt." },
     { "type": "text", "id": "placeholder", "label": "Placeholder zoekveld", "default": "Postcode of stad" },
     { "type": "text", "id": "countries", "label": "Landen voor zoeken (ISO-codes)", "default": "be,nl,fr,de,lu,at,it", "info": "Beperkt de zoekresultaten, bv. be,nl. Leeg laten = wereldwijd." },
+    { "type": "text", "id": "google_maps_key", "label": "Google Maps API-sleutel", "info": "Optioneel. Met sleutel: Google Maps-kaart en Google-adreszoeker. Zonder sleutel: OpenStreetMap-kaart." },
     { "type": "range", "id": "height", "label": "Hoogte (px, desktop)", "min": 480, "max": 1000, "step": 20, "default": 720 },
     { "type": "text", "id": "center_lat", "label": "Startpunt kaart: breedtegraad", "default": "50.85" },
     { "type": "text", "id": "center_lng", "label": "Startpunt kaart: lengtegraad", "default": "4.35" },

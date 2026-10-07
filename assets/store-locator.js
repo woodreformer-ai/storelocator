@@ -1,10 +1,25 @@
 /* Wood Reformer store locator
-   Leaflet + OpenStreetMap (geen API-sleutel nodig). Zoeken via Nominatim. */
+   Kaart: Google Maps (als er een API-sleutel is ingesteld) of Leaflet + OpenStreetMap als terugval.
+   Zoeken: Google Geocoding of Nominatim, afhankelijk van de kaart. */
 (function () {
   'use strict';
 
   var GEO_URL = 'https://nominatim.openstreetmap.org/search';
-  var CACHE_KEY = 'wr-geocode-v1';
+  var CACHE_KEY = 'wr-geocode-v2';
+  // rustig zwart-wit kaartbeeld dat bij het thema past
+  var GOOGLE_STYLE = [
+    { elementType: 'geometry', stylers: [{ color: '#f2f2f2' }] },
+    { elementType: 'labels.icon', stylers: [{ visibility: 'off' }] },
+    { elementType: 'labels.text.fill', stylers: [{ color: '#666666' }] },
+    { elementType: 'labels.text.stroke', stylers: [{ color: '#ffffff' }] },
+    { featureType: 'administrative', elementType: 'geometry.stroke', stylers: [{ color: '#c9c9c9' }] },
+    { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+    { featureType: 'transit', stylers: [{ visibility: 'off' }] },
+    { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#ffffff' }] },
+    { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#e0e0e0' }] },
+    { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#dedede' }] },
+    { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#d6d6d6' }] }
+  ];
 
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
@@ -20,25 +35,166 @@
   }
   function readCache() { try { return JSON.parse(localStorage.getItem(CACHE_KEY)) || {}; } catch (e) { return {}; } }
   function writeCache(c) { try { localStorage.setItem(CACHE_KEY, JSON.stringify(c)); } catch (e) {} }
+  function popupHtml(s) {
+    return '<div class="wr-popup"><div class="wr-popup__name">' + esc(s.name) + '</div><div>' + esc(s.address) + '</div></div>';
+  }
 
-  function geocode(query, countries) {
-    var cache = readCache(), key = query.toLowerCase().trim();
-    if (cache[key]) return Promise.resolve(cache[key]);
+  /* ---------- geocoding ---------- */
+  var googleGeocoder = null;
+  function geocodeGoogle(query) {
+    return new Promise(function (resolve) {
+      googleGeocoder = googleGeocoder || new google.maps.Geocoder();
+      googleGeocoder.geocode({ address: query }, function (res, status) {
+        if (status === 'OK' && res && res[0]) {
+          var l = res[0].geometry.location;
+          resolve({ lat: l.lat(), lng: l.lng() });
+        } else resolve(null);
+      });
+    });
+  }
+  function geocodeNominatim(query, countries) {
     var url = GEO_URL + '?format=json&limit=1&q=' + encodeURIComponent(query) +
       (countries ? '&countrycodes=' + encodeURIComponent(countries) : '');
     return fetch(url, { headers: { Accept: 'application/json' } })
       .then(function (r) { return r.json(); })
-      .then(function (res) {
-        if (!res || !res.length) return null;
-        var p = { lat: parseFloat(res[0].lat), lng: parseFloat(res[0].lon) };
-        cache[key] = p; writeCache(cache);
-        return p;
-      })
+      .then(function (res) { return res && res.length ? { lat: parseFloat(res[0].lat), lng: parseFloat(res[0].lon) } : null; })
       .catch(function () { return null; });
   }
+  function geocode(query, countries, useGoogle) {
+    var cache = readCache(), key = (useGoogle ? 'g:' : 'n:') + query.toLowerCase().trim();
+    if (cache[key]) return Promise.resolve(cache[key]);
+    return (useGoogle ? geocodeGoogle(query) : geocodeNominatim(query, countries)).then(function (p) {
+      if (p) { cache[key] = p; writeCache(cache); }
+      return p;
+    });
+  }
 
+  /* ---------- kaart-adapters: dezelfde methodes voor Google en Leaflet ---------- */
+  function LeafletMap(el, cfg) {
+    var self = this;
+    this.map = L.map(el, { scrollWheelZoom: false })
+      .setView([cfg.centerLat || 50.85, cfg.centerLng || 4.35], cfg.zoom || 7);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; OpenStreetMap &copy; CARTO', maxZoom: 19
+    }).addTo(this.map);
+    // scrollen op de kaart pas na een klik, zodat de pagina niet "vastzit"
+    this.map.on('click', function () { self.map.scrollWheelZoom.enable(); });
+    this.map.on('mouseout', function () { self.map.scrollWheelZoom.disable(); });
+    this.layer = L.layerGroup().addTo(this.map);
+    this.markers = {};
+  }
+  LeafletMap.prototype.fit = function (pts, maxZoom) {
+    if (pts.length > 1) this.map.fitBounds(pts.map(function (p) { return [p.lat, p.lng]; }), { padding: [60, 60], maxZoom: maxZoom || 18 });
+    else if (pts.length === 1) this.map.setView([pts[0].lat, pts[0].lng], Math.min(maxZoom || 12, 12));
+  };
+  LeafletMap.prototype.focus = function (p) { this.map.flyTo([p.lat, p.lng], Math.max(this.map.getZoom(), 13), { duration: .6 }); };
+  LeafletMap.prototype.setMarkers = function (studios, activeId, onSelect) {
+    var self = this;
+    this.layer.clearLayers();
+    this.markers = {};
+    studios.forEach(function (s) {
+      var m = L.marker([s.lat, s.lng], {
+        title: s.name,
+        icon: L.divIcon({ className: '', html: '<div class="wr-pin' + (s.id === activeId ? ' is-active' : '') + '"></div>', iconSize: [16, 16], iconAnchor: [8, 8] })
+      });
+      m.bindPopup(popupHtml(s));
+      m.on('click', function () { onSelect(s.id); });
+      m.addTo(self.layer);
+      self.markers[s.id] = m;
+    });
+  };
+  LeafletMap.prototype.openPopup = function (id) { if (this.markers[id]) this.markers[id].openPopup(); };
+  LeafletMap.prototype.setOrigin = function (p) {
+    this.clearOrigin();
+    this.me = L.marker([p.lat, p.lng], {
+      icon: L.divIcon({ className: '', html: '<div class="wr-pin wr-pin--me"></div>', iconSize: [16, 16], iconAnchor: [8, 8] }),
+      interactive: false
+    }).addTo(this.map);
+  };
+  LeafletMap.prototype.clearOrigin = function () { if (this.me) { this.map.removeLayer(this.me); this.me = null; } };
+
+  function GoogleMap(el, cfg) {
+    this.map = new google.maps.Map(el, {
+      center: { lat: parseFloat(cfg.centerLat) || 50.85, lng: parseFloat(cfg.centerLng) || 4.35 },
+      zoom: cfg.zoom || 7,
+      styles: GOOGLE_STYLE,
+      gestureHandling: 'cooperative',   // pagina scrollt gewoon door; ctrl/twee vingers om te zoomen
+      mapTypeControl: false, streetViewControl: false, fullscreenControl: false
+    });
+    this.info = new google.maps.InfoWindow();
+    this.markers = {};
+    this.studios = {};
+  }
+  GoogleMap.prototype.icon = function (active) {
+    return {
+      path: 'M-7,-7 L7,-7 L7,7 L-7,7 Z',
+      fillColor: active ? '#ffffff' : '#000000', fillOpacity: 1,
+      strokeColor: active ? '#000000' : '#ffffff', strokeWeight: 2,
+      scale: active ? 1.5 : 1
+    };
+  };
+  GoogleMap.prototype.fit = function (pts, maxZoom) {
+    var map = this.map;
+    if (pts.length > 1) {
+      var b = new google.maps.LatLngBounds();
+      pts.forEach(function (p) { b.extend(p); });
+      map.fitBounds(b, 60);
+      if (maxZoom) google.maps.event.addListenerOnce(map, 'idle', function () { if (map.getZoom() > maxZoom) map.setZoom(maxZoom); });
+    } else if (pts.length === 1) { map.setCenter(pts[0]); map.setZoom(Math.min(maxZoom || 12, 12)); }
+  };
+  GoogleMap.prototype.focus = function (p) {
+    this.map.panTo(p);
+    if (this.map.getZoom() < 13) this.map.setZoom(13);
+  };
+  GoogleMap.prototype.setMarkers = function (studios, activeId, onSelect) {
+    var self = this;
+    Object.keys(this.markers).forEach(function (k) { self.markers[k].setMap(null); });
+    this.markers = {}; this.studios = {};
+    studios.forEach(function (s) {
+      var m = new google.maps.Marker({
+        map: self.map, position: { lat: s.lat, lng: s.lng }, title: s.name,
+        icon: self.icon(s.id === activeId), zIndex: s.id === activeId ? 10 : 1
+      });
+      m.addListener('click', function () { onSelect(s.id); });
+      self.markers[s.id] = m; self.studios[s.id] = s;
+    });
+  };
+  GoogleMap.prototype.openPopup = function (id) {
+    if (!this.markers[id]) return;
+    this.info.setContent(popupHtml(this.studios[id]));
+    this.info.open({ map: this.map, anchor: this.markers[id] });
+  };
+  GoogleMap.prototype.setOrigin = function (p) {
+    this.clearOrigin();
+    this.me = new google.maps.Marker({
+      map: this.map, position: p, clickable: false,
+      icon: { path: google.maps.SymbolPath.CIRCLE, scale: 7, fillColor: '#ffffff', fillOpacity: 1, strokeColor: '#000000', strokeWeight: 4 }
+    });
+  };
+  GoogleMap.prototype.clearOrigin = function () { if (this.me) { this.me.setMap(null); this.me = null; } };
+
+  /* ---------- Google Maps script laden ---------- */
+  var googleLoading = null, instance = null;
+  function loadGoogle(key) {
+    if (window.google && window.google.maps && window.google.maps.Map) return Promise.resolve();
+    if (googleLoading) return googleLoading;
+    googleLoading = new Promise(function (resolve, reject) {
+      window.__wrGoogleReady = resolve;
+      // ongeldige/beperkte sleutel: terugvallen op OpenStreetMap
+      window.gm_authFailure = function () { if (instance) instance.useLeaflet(); reject(new Error('auth')); };
+      var s = document.createElement('script');
+      s.src = 'https://maps.googleapis.com/maps/api/js?key=' + encodeURIComponent(key) + '&callback=__wrGoogleReady&v=weekly';
+      s.async = true;
+      s.onerror = function () { reject(new Error('load')); };
+      document.head.appendChild(s);
+    });
+    return googleLoading;
+  }
+
+  /* ---------- locator ---------- */
   function Locator(root) {
     var cfg = JSON.parse(root.querySelector('[data-wr-config]').textContent);
+    var self = this;
     this.root = root;
     this.cfg = cfg;
     this.studios = (cfg.studios || []).map(function (s, i) {
@@ -51,27 +207,33 @@
     this.origin = null;
     this.activeId = null;
     this.filter = null;
-    this.markers = {};
+    this.useGoogle = false;
     this.$ = function (sel) { return root.querySelector(sel); };
-    this.initMap();
+    instance = this;
     this.bind();
     this.render();
-    this.geocodeMissing();
+    var start = function (google) {
+      self.useGoogle = google;
+      self.mapEl = self.$('[data-wr-map]');
+      self.map = google ? new GoogleMap(self.mapEl, cfg) : new LeafletMap(self.mapEl, cfg);
+      self.render();
+      self.fitAll();
+      self.geocodeMissing();
+    };
+    if (cfg.googleKey) {
+      loadGoogle(cfg.googleKey).then(function () { start(true); }, function () { if (!self.map) start(false); });
+    } else start(false);
   }
 
-  Locator.prototype.initMap = function () {
-    var cfg = this.cfg;
-    this.map = L.map(this.$('[data-wr-map]'), { scrollWheelZoom: false, zoomControl: true })
-      .setView([cfg.centerLat || 50.85, cfg.centerLng || 4.35], cfg.zoom || 7);
-    // CARTO "light" tegels: rustig zwart-wit kaartbeeld dat bij het thema past
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; OpenStreetMap &copy; CARTO', maxZoom: 19
-    }).addTo(this.map);
-    // scrollen op de kaart pas na een klik, zodat de pagina niet "vastzit"
-    var map = this.map;
-    map.on('click', function () { map.scrollWheelZoom.enable(); });
-    map.on('mouseout', function () { map.scrollWheelZoom.disable(); });
-    this.markerLayer = L.layerGroup().addTo(this.map);
+  Locator.prototype.useLeaflet = function () {
+    if (!this.useGoogle || !window.L) return;
+    var el = this.mapEl, fresh = el.cloneNode(false);
+    el.parentNode.replaceChild(fresh, el);
+    this.mapEl = fresh;
+    this.useGoogle = false;
+    this.map = new LeafletMap(fresh, this.cfg);
+    this.render();
+    this.fitAll();
   };
 
   Locator.prototype.bind = function () {
@@ -81,20 +243,17 @@
       var b = e.target.closest('[data-type]');
       if (!b) return;
       self.filter = b.getAttribute('data-type') || null;
-      if (self.activeId != null && self.studios[self.activeId] && self.filter &&
-          self.studios[self.activeId].types.indexOf(self.filter) === -1) self.activeId = null;
+      var a = self.studios[self.activeId];
+      if (a && self.filter && a.types.indexOf(self.filter) === -1) self.activeId = null;
       self.render();
-      if (self.origin) {
-        var near = self.sorted().filter(function (s) { return s.lat != null; }).slice(0, 3);
-        self.map.fitBounds([[self.origin.lat, self.origin.lng]].concat(near.map(function (s) { return [s.lat, s.lng]; })), { padding: [60, 60], maxZoom: 12 });
-      } else self.fitAll();
+      self.refit();
     });
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       var q = self.$('[data-wr-input]').value.trim();
       if (!q) return self.clearOrigin();
       self.status('Zoeken…');
-      geocode(q, self.cfg.countries).then(function (p) {
+      geocode(q, self.cfg.countries, self.useGoogle).then(function (p) {
         if (!p) return self.status('Locatie niet gevonden. Probeer een postcode of stad.');
         self.setOrigin(p, 'Resultaten rond “' + q + '”');
       });
@@ -116,24 +275,30 @@
 
   Locator.prototype.status = function (msg) { this.$('[data-wr-status]').textContent = msg || ''; };
 
+  Locator.prototype.located = function () { return this.sorted().filter(function (s) { return s.lat != null; }); };
+
+  // zoom naar de zoekplek + 3 dichtstbijzijnde, of anders naar alle zichtbare studio's
+  Locator.prototype.refit = function () {
+    if (!this.map) return;
+    if (this.origin) {
+      var near = this.located().slice(0, 3);
+      this.map.fit([this.origin].concat(near.map(function (s) { return { lat: s.lat, lng: s.lng }; })), 12);
+    } else this.fitAll();
+  };
+
   Locator.prototype.setOrigin = function (p, msg) {
     this.origin = p;
-    if (this.meMarker) this.map.removeLayer(this.meMarker);
-    this.meMarker = L.marker([p.lat, p.lng], {
-      icon: L.divIcon({ className: '', html: '<div class="wr-pin wr-pin--me"></div>', iconSize: [16, 16], iconAnchor: [8, 8] }),
-      interactive: false
-    }).addTo(this.map);
+    if (this.map) this.map.setOrigin(p);
     this.status(msg);
     this.render();
-    var near = this.sorted().filter(function (s) { return s.lat != null; }).slice(0, 3);
-    var pts = [[p.lat, p.lng]].concat(near.map(function (s) { return [s.lat, s.lng]; }));
-    this.map.fitBounds(pts, { padding: [60, 60], maxZoom: 12 });
-    if (near[0]) this.select(near[0].id, false);
+    this.refit();
+    var first = this.located()[0];
+    if (first) this.select(first.id, false);
   };
 
   Locator.prototype.clearOrigin = function () {
     this.origin = null;
-    if (this.meMarker) { this.map.removeLayer(this.meMarker); this.meMarker = null; }
+    if (this.map) this.map.clearOrigin();
     this.status('');
     this.render();
     this.fitAll();
@@ -155,16 +320,14 @@
     if (!box) return;
     if (types.length < 2) { box.hidden = true; return; }
     box.hidden = false;
-    var all = [null].concat(types);
-    box.innerHTML = '<span class="wr-locator__filter-label">Type reformer</span>' + all.map(function (t) {
+    box.innerHTML = '<span class="wr-locator__filter-label">Type reformer</span>' + [null].concat(types).map(function (t) {
       var on = (t === self.filter);
       return '<button type="button" class="wr-chip' + (on ? ' is-on' : '') + '" aria-pressed="' + on + '" data-type="' + esc(t || '') + '">' + esc(t || 'Alle') + '</button>';
     }).join('');
   };
 
   Locator.prototype.sorted = function () {
-    var o = this.origin;
-    var list = this.visible();
+    var o = this.origin, list = this.visible();
     list.forEach(function (s) { s.dist = (o && s.lat != null) ? distanceKm(o, s) : null; });
     list.sort(function (a, b) {
       if (o) {
@@ -178,44 +341,35 @@
   };
 
   Locator.prototype.render = function () {
-    var self = this, list = this.sorted();
-    var ul = this.$('[data-wr-list]');
+    var self = this, list = this.sorted(), ul = this.$('[data-wr-list]');
     this.renderFilters();
     this.$('[data-wr-count]').textContent = list.length + (list.length === 1 ? ' studio' : ' studio’s');
-    if (!list.length) { ul.innerHTML = '<li class="wr-locator__empty">Geen studio’s gevonden voor deze selectie.</li>'; this.renderMarkers(); return; }
-    ul.innerHTML = list.map(function (s) {
-      var img = s.image
-        ? '<img class="wr-studio__img" src="' + esc(s.image) + '" alt="' + esc(s.name) + '" loading="lazy" width="112" height="112">'
-        : '<div class="wr-studio__img wr-studio__img--empty" aria-hidden="true">W</div>';
-      var dist = s.dist != null ? '<div class="wr-studio__dist">' + (s.dist < 10 ? s.dist.toFixed(1) : Math.round(s.dist)) + ' km</div>' : '';
-      var tags = s.types.length ? '<div class="wr-studio__types">' + s.types.map(function (t) { return '<span class="wr-tag">' + esc(t) + '</span>'; }).join('') + '</div>' : '';
-      var links = [];
-      if (s.lat != null) links.push('<a href="https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(s.name + ', ' + s.address) + '" target="_blank" rel="noopener">Route</a>');
-      if (s.url) links.push('<a href="' + esc(s.url) + '" target="_blank" rel="noopener">Website</a>');
-      if (s.phone) links.push('<a href="tel:' + esc(s.phone.replace(/\s/g, '')) + '">' + esc(s.phone) + '</a>');
-      return '<li class="wr-studio' + (s.id === self.activeId ? ' is-active' : '') + '" data-id="' + s.id + '">' +
-        img + '<div><h3 class="wr-studio__name">' + esc(s.name) + '</h3>' + dist +
-        '<address class="wr-studio__addr">' + esc(s.address) + '</address>' + tags +
-        '<div class="wr-studio__links">' + links.join('') + '</div></div></li>';
-    }).join('');
+    if (!list.length) {
+      ul.innerHTML = '<li class="wr-locator__empty">Geen studio’s gevonden voor deze selectie.</li>';
+    } else {
+      ul.innerHTML = list.map(function (s) {
+        var img = s.image
+          ? '<img class="wr-studio__img" src="' + esc(s.image) + '" alt="' + esc(s.name) + '" loading="lazy" width="112" height="112">'
+          : '<div class="wr-studio__img wr-studio__img--empty" aria-hidden="true">W</div>';
+        var dist = s.dist != null ? '<div class="wr-studio__dist">' + (s.dist < 10 ? s.dist.toFixed(1) : Math.round(s.dist)) + ' km</div>' : '';
+        var tags = s.types.length ? '<div class="wr-studio__types">' + s.types.map(function (t) { return '<span class="wr-tag">' + esc(t) + '</span>'; }).join('') + '</div>' : '';
+        var links = ['<a href="https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(s.name + ', ' + s.address) + '" target="_blank" rel="noopener">Route</a>'];
+        if (s.url) links.push('<a href="' + esc(s.url) + '" target="_blank" rel="noopener">Website</a>');
+        if (s.phone) links.push('<a href="tel:' + esc(s.phone.replace(/\s/g, '')) + '">' + esc(s.phone) + '</a>');
+        return '<li class="wr-studio' + (s.id === self.activeId ? ' is-active' : '') + '" data-id="' + s.id + '">' +
+          img + '<div><h3 class="wr-studio__name">' + esc(s.name) + '</h3>' + dist +
+          '<address class="wr-studio__addr">' + esc(s.address) + '</address>' + tags +
+          '<div class="wr-studio__links">' + links.join('') + '</div></div></li>';
+      }).join('');
+    }
     this.renderMarkers();
   };
 
   Locator.prototype.renderMarkers = function () {
+    if (!this.map) return;
     var self = this;
-    this.markerLayer.clearLayers();
-    this.markers = {};
-    this.visible().forEach(function (s) {
-      if (s.lat == null) return;
-      var m = L.marker([s.lat, s.lng], {
-        title: s.name,
-        icon: L.divIcon({ className: '', html: '<div class="wr-pin' + (s.id === self.activeId ? ' is-active' : '') + '"></div>', iconSize: [16, 16], iconAnchor: [8, 8] })
-      });
-      m.bindPopup('<div class="wr-popup__name">' + esc(s.name) + '</div><div>' + esc(s.address) + '</div>');
-      m.on('click', function () { self.select(s.id, false); });
-      m.addTo(self.markerLayer);
-      self.markers[s.id] = m;
-    });
+    this.map.setMarkers(this.visible().filter(function (s) { return s.lat != null; }), this.activeId,
+      function (id) { self.select(id, false); });
   };
 
   Locator.prototype.select = function (id, pan) {
@@ -230,29 +384,28 @@
       ul.scrollTo({ top: active.offsetTop - ul.offsetTop, behavior: 'smooth' });
     }
     this.renderMarkers();
-    if (s && s.lat != null) {
-      if (pan) this.map.flyTo([s.lat, s.lng], Math.max(this.map.getZoom(), 13), { duration: .6 });
-      if (this.markers[id]) this.markers[id].openPopup();
+    if (this.map && s && s.lat != null) {
+      if (pan) this.map.focus({ lat: s.lat, lng: s.lng });
+      this.map.openPopup(id);
     }
   };
 
   Locator.prototype.fitAll = function () {
-    var pts = this.visible().filter(function (s) { return s.lat != null; }).map(function (s) { return [s.lat, s.lng]; });
-    if (pts.length > 1) this.map.fitBounds(pts, { padding: [50, 50] });
-    else if (pts.length === 1) this.map.setView(pts[0], 12);
+    if (!this.map) return;
+    this.map.fit(this.visible().filter(function (s) { return s.lat != null; })
+      .map(function (s) { return { lat: s.lat, lng: s.lng }; }));
   };
 
   // Studio's zonder coördinaten worden automatisch opgezocht (gecached in de browser)
   Locator.prototype.geocodeMissing = function () {
     var self = this, todo = this.studios.filter(function (s) { return s.lat == null && s.address; });
-    this.fitAll();
     (function next() {
       var s = todo.shift();
       if (!s) return;
-      var cached = readCache()[s.address.toLowerCase().trim()];
-      geocode(s.address, null).then(function (p) {
+      var g = self.useGoogle;
+      geocode(s.address, null, g).then(function (p) {
         if (p) { s.lat = p.lat; s.lng = p.lng; self.render(); self.fitAll(); }
-        setTimeout(next, cached ? 0 : 1100); // Nominatim: max 1 aanvraag/sec
+        setTimeout(next, g ? 100 : 1100); // Nominatim: max 1 aanvraag/sec
       });
     })();
   };

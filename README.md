@@ -26,3 +26,11 @@ Kaart: Leaflet + OpenStreetMap/CARTO (geen API-sleutel). Zoeken: Nominatim.
 3. Foto's voeg je daarna per studio-blok toe via *Foto studio*.
 
 Let op: de coördinaten in de data zijn indicatief (dorp/stad). Zonder exacte positie staat de marker enkele honderden meters naast de studio; de routeknop gebruikt wel het volledige adres.
+
+## Google Maps (optioneel)
+Vul in de sectie-instellingen **Google Maps API-sleutel** in om een Google Maps-kaart (in zwart-wit stijl) en de Google-adreszoeker te gebruiken.
+1. Google Cloud Console → project aanmaken → facturatie koppelen → *Maps JavaScript API* en *Geocoding API* inschakelen.
+2. API-sleutel maken en beperken tot *HTTP referrers*: `woodreformer.com/*` en `*.myshopify.com/*`.
+3. Sleutel plakken in de sectie. Is de sleutel leeg of ongeldig, dan valt de locator terug op OpenStreetMap.
+
+In `demo/index.html` (lokaal openen in de browser) zie je de OpenStreetMap-kaart met echte kaartbeelden.
