@@ -190,7 +190,7 @@
       var dist = s.dist != null ? '<div class="wr-studio__dist">' + (s.dist < 10 ? s.dist.toFixed(1) : Math.round(s.dist)) + ' km</div>' : '';
       var tags = s.types.length ? '<div class="wr-studio__types">' + s.types.map(function (t) { return '<span class="wr-tag">' + esc(t) + '</span>'; }).join('') + '</div>' : '';
       var links = [];
-      if (s.lat != null) links.push('<a href="https://www.google.com/maps/dir/?api=1&destination=' + s.lat + ',' + s.lng + '" target="_blank" rel="noopener">Route</a>');
+      if (s.lat != null) links.push('<a href="https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(s.name + ', ' + s.address) + '" target="_blank" rel="noopener">Route</a>');
       if (s.url) links.push('<a href="' + esc(s.url) + '" target="_blank" rel="noopener">Website</a>');
       if (s.phone) links.push('<a href="tel:' + esc(s.phone.replace(/\s/g, '')) + '">' + esc(s.phone) + '</a>');
       return '<li class="wr-studio' + (s.id === self.activeId ? ' is-active' : '') + '" data-id="' + s.id + '">' +

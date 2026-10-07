@@ -1,0 +1,372 @@
+{
+  "sections": {
+    "locator": {
+      "type": "store-locator",
+      "blocks": {
+        "studio_1": {
+          "type": "studio",
+          "settings": {
+            "name": "Control",
+            "address": "Dorpstraat 287, 3061 Bertem, België",
+            "reformers": "Oak Foldable",
+            "lat": "50.866",
+            "lng": "4.634"
+          }
+        },
+        "studio_2": {
+          "type": "studio",
+          "settings": {
+            "name": "The Welness Club",
+            "address": "E3-Laan 26, 9300 Deinze, België",
+            "reformers": "Oak Foldable",
+            "lat": "50.983",
+            "lng": "3.528"
+          }
+        },
+        "studio_3": {
+          "type": "studio",
+          "settings": {
+            "name": "Sam's Gym",
+            "address": "Pichlmayergasse 20, 8703 Leoben, Oostenrijk",
+            "reformers": "Oak Foldable",
+            "lat": "47.384",
+            "lng": "15.094"
+          }
+        },
+        "studio_4": {
+          "type": "studio",
+          "settings": {
+            "name": "EMS Fit",
+            "address": "Rue Verte 91, 1030 Schaerbeek, België",
+            "reformers": "Oak Foldable",
+            "lat": "50.867",
+            "lng": "4.373"
+          }
+        },
+        "studio_5": {
+          "type": "studio",
+          "settings": {
+            "name": "Nova Pilates",
+            "address": "Mutsestraat 2, 4641 SJ Ossendrecht, Nederland",
+            "reformers": "Walnut Studio",
+            "lat": "51.392",
+            "lng": "4.337"
+          }
+        },
+        "studio_6": {
+          "type": "studio",
+          "settings": {
+            "name": "Aleva Pilates",
+            "address": "Ringlaan-Zuid 103, 8420 De Haan, België",
+            "reformers": "Oak Foldable",
+            "lat": "51.269",
+            "lng": "3.034"
+          }
+        },
+        "studio_7": {
+          "type": "studio",
+          "settings": {
+            "name": "The Reformery",
+            "address": "Avenue Pascale 7, 1308 Wavre, België",
+            "reformers": "Oak Studio",
+            "lat": "50.717",
+            "lng": "4.601"
+          }
+        },
+        "studio_8": {
+          "type": "studio",
+          "settings": {
+            "name": "Notice",
+            "address": "Damstraat 186, 1980 Zemst, België",
+            "reformers": "Oak Studio",
+            "lat": "50.985",
+            "lng": "4.465"
+          }
+        },
+        "studio_9": {
+          "type": "studio",
+          "settings": {
+            "name": "Boost Studio",
+            "address": "Papegaaistraat 10, 8790 Waregem, België",
+            "reformers": "Walnut Studio",
+            "lat": "50.888",
+            "lng": "3.426"
+          }
+        },
+        "studio_10": {
+          "type": "studio",
+          "settings": {
+            "name": "Level Studios",
+            "address": "Rue Jean Jaures 5, 59290 Wasquehal, Frankrijk",
+            "reformers": "Walnut Foldable",
+            "lat": "50.67",
+            "lng": "3.13"
+          }
+        },
+        "studio_11": {
+          "type": "studio",
+          "settings": {
+            "name": "Airelles Palladio Venice",
+            "address": "Isola Della Giudecca 33, 30133 Venezia, Italië",
+            "reformers": "Walnut Foldable",
+            "lat": "45.425",
+            "lng": "12.327"
+          }
+        },
+        "studio_12": {
+          "type": "studio",
+          "settings": {
+            "name": "MJ Move",
+            "address": "Kleinheide 29, 1500 Halle, België",
+            "reformers": "Oak Foldable",
+            "lat": "50.734",
+            "lng": "4.236"
+          }
+        },
+        "studio_13": {
+          "type": "studio",
+          "settings": {
+            "name": "Annick Collard Coaching",
+            "address": "Chaussée d’Arlon 127, 6600 Bastogne, België",
+            "reformers": "Oak Foldable",
+            "lat": "50.0",
+            "lng": "5.716"
+          }
+        },
+        "studio_14": {
+          "type": "studio",
+          "settings": {
+            "name": "Wow Studio",
+            "address": "Avenue Therese 41, 1330 Rixensart, België",
+            "reformers": "Walnut Studio Tower",
+            "lat": "50.713",
+            "lng": "4.531"
+          }
+        },
+        "studio_15": {
+          "type": "studio",
+          "settings": {
+            "name": "Ochafisport",
+            "address": "Pascallaan 22u, 8218 NJ Lelystad, Nederland",
+            "reformers": "Walnut Foldable",
+            "lat": "52.508",
+            "lng": "5.475"
+          }
+        },
+        "studio_16": {
+          "type": "studio",
+          "settings": {
+            "name": "Heliaca Athletic Club",
+            "address": "Avenue de Lambusart 25/2, 6220 Fleurus, België",
+            "reformers": "Oak Foldable",
+            "lat": "50.483",
+            "lng": "4.549"
+          }
+        },
+        "studio_17": {
+          "type": "studio",
+          "settings": {
+            "name": "Eunoia Pilates",
+            "address": "Venlosesteenweg 48, 3640 Kinrooi, België",
+            "reformers": "Maple Studio",
+            "lat": "51.143",
+            "lng": "5.744"
+          }
+        },
+        "studio_18": {
+          "type": "studio",
+          "settings": {
+            "name": "House of Core",
+            "address": "Neuweg 207, 1214GP Hilversum, Nederland",
+            "reformers": "Oak Studio",
+            "lat": "52.223",
+            "lng": "5.176"
+          }
+        },
+        "studio_19": {
+          "type": "studio",
+          "settings": {
+            "name": "Rishi Studio",
+            "address": "Stationsstraat 12/B0001, 8770 Ingelmunster, België",
+            "reformers": "Oak Foldable",
+            "lat": "50.923",
+            "lng": "3.258"
+          }
+        },
+        "studio_20": {
+          "type": "studio",
+          "settings": {
+            "name": "Bambu Studio",
+            "address": "Avenue de l’Artisanat 2A, 1427 Braine l'Alleud, België",
+            "reformers": "Oak Studio",
+            "lat": "50.683",
+            "lng": "4.368"
+          }
+        },
+        "studio_21": {
+          "type": "studio",
+          "settings": {
+            "name": "Reform One",
+            "address": "Geneikenstraat 26, 3560 Lummen, België",
+            "reformers": "Oak Foldable",
+            "lat": "50.992",
+            "lng": "5.205"
+          }
+        },
+        "studio_22": {
+          "type": "studio",
+          "settings": {
+            "name": "Nostra Pilates Reformer Club",
+            "address": "Via Amedeo Modigliani 15, Monza MB 20907, Italië",
+            "reformers": "Oak Foldable",
+            "lat": "45.584",
+            "lng": "9.274"
+          }
+        },
+        "studio_23": {
+          "type": "studio",
+          "settings": {
+            "name": "Lokahi Holistic Studio",
+            "address": "Avenue du Mont Kemmel 17, 1190 Bruxelles, België",
+            "reformers": "Oak Foldable",
+            "lat": "50.81",
+            "lng": "4.318"
+          }
+        },
+        "studio_24": {
+          "type": "studio",
+          "settings": {
+            "name": "Cocoon Pilates",
+            "address": "Kraailokerkweg 13, 9990 Maldegem, België",
+            "reformers": "Oak Foldable",
+            "lat": "51.209",
+            "lng": "3.442"
+          }
+        },
+        "studio_25": {
+          "type": "studio",
+          "settings": {
+            "name": "Kinelux",
+            "address": "Rue de Muhlenbach 121, L-2168 Luxembourg, Luxemburg",
+            "reformers": "Oak Foldable",
+            "lat": "49.62",
+            "lng": "6.12"
+          }
+        },
+        "studio_26": {
+          "type": "studio",
+          "settings": {
+            "name": "Project Balans",
+            "address": "Sannastraat 16, 9450 Denderhoutem, België",
+            "reformers": "Oak Foldable",
+            "lat": "50.912",
+            "lng": "3.992"
+          }
+        },
+        "studio_27": {
+          "type": "studio",
+          "settings": {
+            "name": "Studio Routine",
+            "address": "Dreesplein 1, 2672EA Naaldwijk, Nederland",
+            "reformers": "Walnut Studio",
+            "lat": "51.995",
+            "lng": "4.203"
+          }
+        },
+        "studio_28": {
+          "type": "studio",
+          "settings": {
+            "name": "Studio Lies",
+            "address": "Reebokweg 6, 3090 Overijse, België",
+            "reformers": "Walnut Studio",
+            "lat": "50.771",
+            "lng": "4.534"
+          }
+        },
+        "studio_29": {
+          "type": "studio",
+          "settings": {
+            "name": "Studio Calm",
+            "address": "Markt 10, 23611 Bad Schwartau, Duitsland",
+            "reformers": "Walnut Foldable",
+            "lat": "53.917",
+            "lng": "10.699"
+          }
+        },
+        "studio_30": {
+          "type": "studio",
+          "settings": {
+            "name": "Kinesitherapie",
+            "address": "Leopold III-Laan, 5, 8710 Wielsbeke, België",
+            "reformers": "Oak Foldable",
+            "lat": "50.903",
+            "lng": "3.364"
+          }
+        },
+        "studio_31": {
+          "type": "studio",
+          "settings": {
+            "name": "Honey Pilates",
+            "address": "Oude Vest 54, 9200 Dendermonde, België",
+            "reformers": "Oak Studio",
+            "lat": "51.028",
+            "lng": "4.101"
+          }
+        },
+        "studio_32": {
+          "type": "studio",
+          "settings": {
+            "name": "Physio Gustavo Garrett",
+            "address": "G. A. Ryckmanslaan 2, 3080 Tervuren, België",
+            "reformers": "Oak Foldable",
+            "lat": "50.824",
+            "lng": "4.512"
+          }
+        }
+      },
+      "block_order": [
+        "studio_1",
+        "studio_2",
+        "studio_3",
+        "studio_4",
+        "studio_5",
+        "studio_6",
+        "studio_7",
+        "studio_8",
+        "studio_9",
+        "studio_10",
+        "studio_11",
+        "studio_12",
+        "studio_13",
+        "studio_14",
+        "studio_15",
+        "studio_16",
+        "studio_17",
+        "studio_18",
+        "studio_19",
+        "studio_20",
+        "studio_21",
+        "studio_22",
+        "studio_23",
+        "studio_24",
+        "studio_25",
+        "studio_26",
+        "studio_27",
+        "studio_28",
+        "studio_29",
+        "studio_30",
+        "studio_31",
+        "studio_32"
+      ],
+      "settings": {
+        "countries": "be,nl,fr,de,lu,at,it",
+        "center_lat": "50.6",
+        "center_lng": "5.0",
+        "zoom": 7
+      }
+    }
+  },
+  "order": [
+    "locator"
+  ]
+}

@@ -17,3 +17,12 @@ Kaart: Leaflet + OpenStreetMap/CARTO (geen API-sleutel). Zoeken: Nominatim.
 - Zonder coördinaten wordt het adres automatisch opgezocht (gecached in browser); vul lat/lng in voor snelheid.
 
 `demo/index.html` toont het geheel lokaal met voorbeelddata.
+
+## Studio's importeren
+`data/studios.json` bevat de 32 studio's uit het tabblad *Studios* van `Inventory & Sales 2026-4.xlsx`.
+`templates/page.store-locator.json` is een kant-en-klaar pagina-template met de sectie en alle 32 studio-blokken:
+1. Theme → Edit code → map *Templates* → *Add a new template* (type *page*, naam `store-locator`) en plak de inhoud.
+2. Wijs dit template toe aan de pagina (of kopieer de `sections`-entry naar het b2b-template).
+3. Foto's voeg je daarna per studio-blok toe via *Foto studio*.
+
+Let op: de coördinaten in de data zijn indicatief (dorp/stad). Zonder exacte positie staat de marker enkele honderden meters naast de studio; de routeknop gebruikt wel het volledige adres.
